@@ -1,0 +1,68 @@
+\begin{tikzpicture}[line width=2pt]
+  \def\vRad{4pt}
+  \tikzset{%
+    refPt/.style={green!70!black}
+  }
+  % Bounding box
+  \coordinate (ll) at (-5,-3);
+  \coordinate (ur) at (5,3);
+  \path let \p1=(ll), \p2=(ur) in coordinate (lr) at (\x2,\y1);
+  \path let \p1=(ll), \p2=(ur) in coordinate (ul) at (\x1,\y2);
+
+  % Draw room
+  \draw[obstEdge] (ll) -- (lr) -- (ur) -- (ul) -- cycle;
+
+  % Define and draw obstacle
+  \coordinate (a) at ($(0,1)+($(ll)!0.3!(lr)$)$);
+  \draw[obst] (a) -- ++(90:3) coordinate (b) -- ++(0:2) coordinate (c)
+  -- ++(-90:3) coordinate (d) -- cycle;
+
+  \coordinate (s) at (-4.5,-1);
+  \coordinate (t) at (3.5,1);
+
+  \onslide<2-4>{
+    \draw[robot,fill=green] (s) -- ++(90:1) -- ++(-30:1) -- ++(210:1) -- cycle;
+    \fill[refPt] (s) node[black,below]{$s$} circle (\vRad);
+    \draw[robot,fill=green] (t) -- ++(90:1) -- ++(-30:1) -- ++(210:1) -- cycle;
+    \fill[refPt] (t) node[black,below]{$t$} circle (\vRad);
+  }
+
+  \onslide<3-4>{
+    \draw[robot] ($(a)+(0,-1)$) coordinate (o1) -- ++(90:1) -- ++(-30:1) -- ++(210:1) -- cycle;
+    \fill[refPt] (o1) circle (\vRad);
+    \pgfmathsetmacro{\tmp}{sqrt(1-0.25)}
+    \draw[robot] ($(a)+(-\tmp,-0.5)$) coordinate (o2) -- ++(90:1) -- ++(-30:1) -- ++(210:1) -- cycle;
+    \fill[refPt] (o2) circle (\vRad);
+    \draw[robot] ($(b)+(-\tmp,-0.5)$) coordinate (o3) -- ++(90:1) -- ++(-30:1) -- ++(210:1) -- cycle;
+    \fill[refPt] (o3) circle (\vRad);
+    \draw[robot] (b) -- ++(90:1) -- ++(-30:1) -- ++(210:1) -- cycle;
+    \fill[refPt] (b) circle (\vRad);
+    \draw[robot] (c) -- ++(90:1) -- ++(-30:1) -- ++(210:1) -- cycle;
+    \fill[refPt] (c) circle (\vRad);
+    \draw[robot] ($(d)+(0,-1)$) coordinate (o4) -- ++(90:1) -- ++(-30:1) -- ++(210:1) -- cycle;
+    \fill[refPt] (o4) circle (\vRad);
+    % sliding the robot on the room's boundary
+    \draw[robot] ($(ul)+(0,-1)$) coordinate (oo1) -- ++(90:1) -- ++(-30:1) -- cycle;
+    \fill[refPt] (oo1) circle (\vRad);
+    \draw[robot] ($(ur)+(-\tmp,-1)$) coordinate (oo2) -- ++(90:1) -- ++(-30:1) -- cycle;
+    \fill[refPt] (oo2) circle (\vRad);
+    \draw[robot] ($(lr)+(-\tmp,0)$) coordinate (oo3) -- ++(90:1) -- ++(-30:1) -- cycle;
+    \fill[refPt] (oo3) circle (\vRad);
+  }
+
+  \onslide<4>{
+    \draw[blue] (o1) -- (o2) -- (o3) -- (b) -- (c) -- (o4) -- cycle;
+    \draw[blue] (oo1) -- (oo2) -- (oo3) -- (lr) -- (ur) -- (ul) -- cycle;
+  }
+  \onslide<5>{
+    \filldraw[blue] (o1) -- (o2) -- (o3) -- (b) -- (c) -- (o4) -- cycle;
+    \filldraw[blue] (oo1) -- (oo2) -- (oo3) -- (lr) -- (ur) -- (ul) -- cycle;
+    \draw[blue] (ll) -- (lr) -- (ur) -- (ul) -- cycle;
+  }
+  \onslide<5>{
+    \begin{scope}[refPt]
+      \fill (s) node[black,below]{$s$} circle (\vRad);
+      \fill (t) node[black,below]{$t$} circle (\vRad);
+    \end{scope}
+  }
+\end{tikzpicture}

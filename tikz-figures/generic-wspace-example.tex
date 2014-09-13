@@ -1,0 +1,70 @@
+\begin{tikzpicture}[x=10pt,y=10pt]
+  \def\vRad{2pt}
+  %%%%
+  % Robot
+  \newcommand{\plotRobot}[3]{
+    \begin{scope}[xshift=#1,yshift=#2,rotate=#3]
+      \coordinate (a1) at ($(0:2)$);
+      \coordinate (a2) at ($(70:4)$);
+      \coordinate (a3) at ($(145:3)$);
+      \coordinate (a4) at ($(200:3)$);
+      \coordinate (a5) at ($(290:2)$);
+
+      \draw [robot,line width =\vRad] %
+      (a1)  -- (a2) -- (a3) -- (a4) -- (a5) -- cycle;
+
+      \foreach \i in {1,...,5}
+      \fill [green!70] (a\i) circle (2*\vRad);
+
+      % \begin{scope}[scale=0.5,rotate=70,yshift=10,xshift=10]
+      %   \draw[fill=gray] (-2,-1) rectangle (2,1);
+      %   \draw[fill=gray!20] (-2,1) {[rounded corners]-- (0,0)} -- (2,1) -- cycle;
+      % \end{scope}
+    \end{scope}
+  }
+
+  \def\bbminx{-15}
+  \def\bbminy{-8}
+  \def\bbmaxx{15}
+  \def\bbmaxy{8}
+
+  \draw[obstEdge,line width=\vRad] (\bbminx,\bbminy) rectangle (\bbmaxx,\bbmaxy);
+  \coordinate (b11) at (1,1);
+  \coordinate (b12) at (1,\bbmaxy);
+  \coordinate (b13) at (-1,\bbmaxy);
+  \coordinate (b14) at (-1,-1);
+  \draw[obst,line width=\vRad] (b11) -- (b12) -- (b13)  -- (b14) -- cycle;
+
+  \coordinate (b12) at (-6,-3);
+  \coordinate (b22) at (-8,-1);
+  \coordinate (b23) at (-10,-2);
+  \coordinate (b24) at (-9,-4);
+  \coordinate (b25) at (-12,-6);
+  \coordinate (b26) at (-9,-7);
+  \coordinate (b27) at (-6,-4);
+  \draw[obst,line width=\vRad] (b12) -- (b22) -- (b23)  -- (b24) -- (b25) -- (b26) -- (b27) -- cycle;
+
+  \coordinate (b13) at (10,\bbminy);
+  \coordinate (b23) at (11,0);
+  \coordinate (b33) at (7.8,2.9);
+  \coordinate (b43) at (6,\bbminy);
+  \draw[obst,line width=\vRad] (b13) -- (b23) -- (b33) -- (b43) -- cycle;
+
+  \begin{scope}[decoration={%
+      markings,
+      mark=% actually add a mark
+      between positions 0.05 and 0.975 step 10mm
+      with
+      {
+        \arrow{>}
+      }
+    }]
+    \draw[*-*,blue,line width=0.5*\vRad,postaction={decorate}] (-10,4) .. controls
+    +(-10:5) .. (-2.5,-3.5) .. controls +(-40:5) and (270:2) .. (4,2)
+    .. controls +(100:5) and (30:15) .. (10,4);
+  \end{scope}
+  \plotRobot{-100}{30}{20}
+  \plotRobot{-25}{-35}{60}
+  \plotRobot{48}{20}{-20}
+  \plotRobot{100}{40}{-90}
+\end{tikzpicture}

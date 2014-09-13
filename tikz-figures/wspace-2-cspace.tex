@@ -1,0 +1,50 @@
+\begin{tikzpicture}[scale=0.5,line width=2pt]
+  \def\drawScene{
+  \def\vRad{4pt}
+  \tikzset{%
+    refPt/.style={green!70!black}
+  }
+  % Bounding box
+  \coordinate (ll) at (-5.5,-3);
+  \coordinate (ur) at (3,3);
+  \path let \p1=(ll), \p2=(ur) in coordinate (lr) at (\x2,\y1);
+  \path let \p1=(ll), \p2=(ur) in coordinate (ul) at (\x1,\y2);
+
+  % Draw room
+  \draw[obstEdge] (ll) -- (lr) -- (ur) -- (ul) -- cycle;
+
+  % Define and draw obstacle
+  \coordinate (a) at ($(0,1)+($(ll)!0.3!(lr)$)$);
+  \draw[obst] (a) -- ++(90:3) coordinate (b) -- ++(0:2) coordinate (c)
+  -- ++(-90:3) coordinate (d) -- cycle;
+
+  \coordinate (s) at (-4.5,-1);
+  \coordinate (t) at (3.5,1);
+
+  \coordinate (o1) at ($(a)+(0,-1)$);
+  \pgfmathsetmacro{\tmp}{sqrt(1-0.25)}
+  \coordinate (o2) at ($(a)+(-\tmp,-0.5)$);
+  \coordinate (o3) at ($(b)+(-\tmp,-0.5)$);
+  \coordinate (o4) at ($(d)+(0,-1)$);
+  \coordinate (oo1) at ($(ul)+(0,-1)$);
+  \coordinate (oo2) at ($(ur)+(-\tmp,-1)$);
+  \coordinate (oo3) at ($(lr)+(-\tmp,0)$);
+  }
+
+  \drawScene
+  \path (s) node[black,below=0.5pt] {$\robot(\cp{q})$};
+  \draw[robot,fill=green] (s) -- ++(90:1) -- ++(-30:1) -- ++(210:1) -- cycle;
+  \fill[refPt] (s) circle (\vRad);
+  \node (cspaceLabel) at ($(ll)!0.5!(lr)+(0,-1)$) {$\wspace{}$};
+
+  \begin{scope}[xshift=12cm]
+    \coordinate (arrowBase) at ($(ll)!0.5!(ul)+(9.25cm,0)$);
+    \draw[<->] (arrowBase) -- ++(0:2cm);
+    \node (wsapceLabel) at ($(cspaceLabel)+(12cm,0)$) {$\cspace{}$};
+    \drawScene
+    \fill[refPt] (s) node[black,below] {$\cp{q}$} circle (\vRad);
+    \filldraw[blue] (o1) -- (o2) -- (o3) -- (b) -- (c) -- (o4) -- cycle;
+    \filldraw[blue] (oo1) -- (oo2) -- (oo3) -- (lr) -- (ur) -- (ul) -- cycle;
+    \draw[blue] (ll) -- (lr) -- (ur) -- (ul) -- cycle;
+  \end{scope}
+\end{tikzpicture}

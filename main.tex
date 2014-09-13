@@ -1,0 +1,460 @@
+\documentclass{beamer}
+
+\usepackage[notes=hide]{talk}
+
+\author[D. Atariah]{Dror Atariah @ Game Duell}
+\title[Motion Planning Problem]{On Sampling Based Algorithms for Solving the Motion Planning Problem}
+\date{September 18\textsuperscript{th}, 2014}
+
+\begin{document}
+
+\begin{frame}[plain]
+  \titlepage
+\end{frame}
+
+\section*{Introduction}
+\begin{frame}
+  \frametitle{The Motion Planning Problem}
+  \begin{center}
+    \input{./tikz-figures/generic-wspace-example}
+  \end{center}
+  \note{
+    \begin{itemize}
+    \item The robot's degrees of freedom
+    \item Find a free-path from the source to the target
+    \item We discuss mainly the planar case
+    \end{itemize}
+  }
+\end{frame}
+
+\begin{frame}
+  \frametitle{From a Workspace to a Configuration Space }
+  \begin{block}{Simple Case}
+    The robot can only translate (\(2\) degrees of freedom)
+  \end{block}
+  \begin{center}
+    \input{./tikz-figures/trans-robot-example}
+  \end{center}
+\end{frame}
+\note{
+  \begin{itemize}
+  \item Introduce the configuration space
+  \item Stress that the a robot with a \emph{volume} is replaced with a \emph{point}
+  \item Stress that because \robot{} has 2DOF both \wspace{} and \cspace{} are 2D
+  \end{itemize}
+}
+
+\begin{frame}
+  \frametitle{Workspace and Configuration Space}
+  \begin{definition}
+    Given a \emph{robot} \robot{}, obstacle \obst{} and a \emph{workspace} \wspace{}, we obtain a \emph{configuration space} denoted by \cspace{}.
+    \begin{itemize}
+    \item \(q \in \cspace \xLeftrightarrow{bijection} \robot(q)\)
+    \item \(\cspace = \cforb \cup \cfree\)
+    \end{itemize}
+  \end{definition}
+
+  \begin{center}
+    \input{./tikz-figures/wspace-2-cspace}
+  \end{center}
+\end{frame}
+
+\begin{frame}<5>
+  \frametitle{Configuration Space}
+  \begin{example}
+    \begin{center}
+      \input{./tikz-figures/trans-robot-example}
+    \end{center}
+  \end{example}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Configuration Space}
+  \begin{example}
+    \begin{center}
+      \includegraphics[width=0.9\linewidth]{cspace-example-from-video}
+    \end{center}
+  \end{example}
+\end{frame}
+\note{
+  \begin{itemize}
+  \item Briefly explain what the colors are
+  \end{itemize}
+}
+
+\begin{frame}
+  \frametitle{Problem Statement}
+  \begin{block}{Formal Problem}
+    Navigate a given robot \robot{} in a workspace \wspace{} that is scattered with obstacles \obst{} from a source placement \(\robot(\cp{s})\) to a target one \(\robot(\cp{t})\).
+
+    Equivalently, find a \emph{free path} in \cspace{} from \(\cp{s}\) to \(\cp{t}\).
+  \end{block}
+\end{frame}
+
+\section[PRM]{Probabilistic Roadmap (\cite{Ka96})}
+\subsection*{Method's Overview}
+\begin{frame}[label=prm-overview]
+  \frametitle{In a nut shell}
+  \begin{itemize} % [<+-| alert@+>]
+  \item \robot{} and \wspace{} yield \cspace{}
+  \item Sample \cfree{}
+  \item Build a \emph{roadmap graph} \(\roadmap{} = \left( V,E \right)\)
+    \begin{itemize}
+    \item \(V\) - sample points in \cfree{}
+    \item \(E\) - free (local) motions
+    \end{itemize}
+  \item Connect \(\cp{s}\) and \(\cp{t}\) to \roadmap{} and find free path
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{PRM Demo}
+  \begin{center}
+    \message{---->>>> Generate the ./tikz-figures/prm-outline.tex using ./tikz-figures/prm-outline.py script}
+    \input{./tikz-figures/prm-outline}
+  \end{center}
+\end{frame}
+
+\begin{frame}<1-2>[label=prm-impl-details]
+  \frametitle{Classical PRM \headingCite{Ka96}}
+  \vspace{-1.5ex}
+  \onslide<+->{
+  \begin{algorithm}[H]
+    \begin{algorithmic}[1]
+      \STATE \(V \leftarrow \emptyset\) ; \(E \leftarrow \emptyset\)
+      \LOOP
+        \alert<2,3,4>{\STATE \(\cp{q} \leftarrow\) a point in \(\cfree\)}
+        \STATE \(V \leftarrow V \cup \{\cp{q}\}\)
+        \alert<2>{\STATE \(N_{\cp{q}} \leftarrow\) useful neighbors of \(\cp{q}\)}
+        \FORALL{\(\cp{q}' \in N_{\cp{q}}\)}
+          \IF{\(\cp{q}'\) and \(\cp{q}\) are not connected in \(\mathcal{G}\)}
+            \IF{the \alert<2,5>{local planner} finds a path between \(\cp{q}'\) and \(\cp{q}\)}
+              \STATE \(E \leftarrow E \cup \overline{\cp{q}\cp{q}'}\)
+            \ENDIF
+          \ENDIF
+        \ENDFOR
+      \ENDLOOP
+    \end{algorithmic}
+    \caption{PRMBuildGraph}
+  \end{algorithm}
+  \vspace{-2ex}
+  }
+  \begin{block}<3->{PRM Implementation Details}
+    \begin{itemize}
+    \item<3-|alert@3> {How to sample?}
+    \item<4-|alert@4> {Determine whether a sample point is free?}
+    \item<5-|alert@5> {How to determine whether an \emph{edge} is free or not?}
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+\subsection*{Sampling}
+
+\againframe<3>{prm-impl-details}
+
+\begin{frame}
+  \frametitle{Sample the Configuration Space}
+  \begin{alertblock}{Objective}
+    Obtain a (uniform) sample of \cfree{}
+  \end{alertblock}
+  \begin{block}{Steps}
+    \begin{itemize}
+    \item (Randomly) pick \(\cp{q} \in \cspace\)
+    \item \emph{Collision detection} for \(\robot(\cp{q})\)
+    \end{itemize}
+  \end{block}
+  \note{
+    \begin{itemize}
+    \item Uniform: more important the sample has to be dense in the problematic regions of the cspace.
+    \end{itemize}
+  }
+\end{frame}
+
+\begin{frame}[allowframebreaks,label=main-cspace-pts-pick]
+  \frametitle{Configuration Points Picking}
+  \begin{itemize}
+  \item Random
+  \item Grid
+  \item Cell-Based
+  \item Halton points (pseudo random and deterministic!)~\hyperlink{app-halton}{\beamerbutton{more\dots}}
+  \item Random-Halton
+  \end{itemize}
+\end{frame}
+
+\subsection*{Collision Detection}
+
+\againframe<4>{prm-impl-details}
+
+\begin{frame}
+  \frametitle{Collision Detection}
+  \begin{definition}[Predicate]
+    \begin{center}
+      \(\phi \colon \cspace \to \{\mathrm{TRUE,FALSE}\}\), s.t.:%
+    \end{center}
+    \[%
+    \phi(\cp{q}) =
+    \begin{cases}
+      \mathrm{TRUE} & \text{if } \cp{q} \in \cforb\\
+      \mathrm{FALSE} & \text{otherwise}
+    \end{cases}
+    \]%
+  \end{definition}
+
+  \begin{definition}[Distance Function]
+    The distance in \wspace{} between \(\robot(\cp{q})\) and the obstacles is measured by \(d \colon \cspace \to [0,\infty)\).
+  \end{definition}
+  \note{
+    \begin{itemize}
+    \item If \(d(\cp{q})=0\), then \(\phi(\cp{q}) = TRUE\)
+    \end{itemize}
+  }
+\end{frame}
+
+\begin{frame}
+  \frametitle{Two-phase Collision Detection}
+  \begin{alertblock}{Fact}
+    Collision detection is an expensive task that is repeatedly invoked!
+  \end{alertblock}
+  %
+  \begin{block}{Break-up the Task}
+    \begin{itemize}
+    \item Broad Phase (e.g. using bounding boxes)
+    \item Narrow Phase (e.g. using hierarchical methods; See~\cite[\S~5.3.2]{La06})
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+\subsection*{Local Planner}
+\againframe<5>{prm-impl-details}
+
+\begin{frame}
+  \frametitle{Local Planner}
+
+  \begin{block}{Objective}
+    Given \(\cp{q},\cp{q}' \in \cfree\) find a path in \cfree{} connecting them.
+  \end{block}
+
+  \begin{block}{Trade-off}
+    \begin{itemize}
+    \item Accurate and slow
+    \item\alert<2->{Inaccurate and quick}
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+\begin{frame}
+  \frametitle{General Local Planner \headingCite{Ka96}}
+  \begin{block}{}
+    \begin{itemize}
+    \item Given \(\cp{q},\cp{q}' \in \cfree\)
+    \item Let \(\{\cp{c}_i\}\) be points on the \emph{line} connecting \(\cp{q}\) and \(\cp{q}'\), s.t. \(\mathrm{d}(\robot(\cp{c}_i),\robot(\cp{c}_{i+1})) \leq \epsilon\)
+    \item \(\forall i\): collision detection for \(\robot_\epsilon(\cp{c}_i)\)
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Binary Local Planner \headingCite{Ro02}}
+  \begin{block}{}
+    \begin{itemize}
+    \item Given \(\cp{q},\cp{q}' \in \cfree\)
+    \item Let \(\cp{c}\) be the midpoint of the \emph{line} connecting \(\cp{q}\) and \(\cp{q}'\)
+      \begin{itemize}
+      \item Collision detection for \(\robot(\cp{c})\)
+      \item Repeat on two sides of \(\cp{c}\)
+      \end{itemize}
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+\subsection*{Completeness of the Method}
+
+\begin{frame}
+  \frametitle{Completeness of the Method}
+  \begin{definition}<2->
+    A method is \emph{probabilistically complete} if the probability of answering a query \emph{incorrectly} after building a roadmap tends to zero as the number of samples goes to \emph{infinity}.
+  \end{definition}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Influencing Parameters}
+  \begin{itemize}
+  \item \(N\) - number of samples
+  \item \(\gamma \colon [0,L] \to \cfree\) - free path from \(\gamma(0) = \cp{s}\) to \(\gamma(L) = \cp{t}\).
+  \item \(R = \inf_{0 \leq t \leq L} \inf_{y \in\obst}|\gamma(t) - y|\)
+  \end{itemize}
+
+  \input{prm-completeness-thm}
+\end{frame}
+
+\begin{frame}
+  \frametitle{PRM is Probabilistic Complete}
+  \input{prm-completeness-thm}
+  \begin{columns}
+    \only<1-4>{
+    \begin{column}{0.46\textwidth}
+      \begin{itemize}
+      \item<2-4> \(n = \ceil{2L/R}\) points on \(\gamma\)
+      \item<2-4> \(d(\cp{x}_i,\cp{x}_{i+1}) \leq R/2\) and \(B_{R/2}(\cp{x}_{i+1}) \subset B_R(\cp{x}_i)\)
+      \item<3-4> \(\Rightarrow \overline{\cp{c}\cp{d}}\) is free
+      \item<4> PRM succeeds if each \(B_{R/2}(\cp{x}_j)\) contains a sample
+      \item<4> \(P(B_{R/2}(\cp{x}_j) \text{ is empty}) = \left(1-\frac{|B_{R/2}|}{|\cfree|}\right)^N\)
+      \end{itemize}
+    \end{column}
+  }
+\only<5->{
+  \begin{column}{0.46\textwidth}
+    \begin{align*}
+      & P(\fail)\\
+      & \leq P(\text{some ball is empty}) \\
+      & \leq \sum_{j=1}^{n-1} P(j\text{-th ball is empty})\\
+      & = \left( \ceil[\Bigg]{\frac{2L}{R}}-1 \right) \left( 1- \frac{|B_{R/2}|}{|\cfree|} \right)^N
+    \end{align*}
+  \end{column}
+}
+    \begin{column}{0.54\textwidth}
+      \begin{center}
+        \input{./tikz-figures/prm-completeness-proof}
+      \end{center}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\subsection*{Summary}
+\againframe{prm-overview}
+
+\section[MMS]{Motion Planning via Manifold Samples (\cite{Sa13})}
+\begin{frame}<5>
+  \frametitle{Motion Planning via Manifold Samples \headingCite{Sa13}}
+  \begin{itemize}
+  \item In PRM connectivity of \cspace{} is captured via point samples
+  \item Try to obtain ``bigger'' samples and improve the capturing
+  \end{itemize}
+  \begin{center}
+    \scalebox{0.7}{\input{./tikz-figures/prm-outline}}
+  \end{center}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Outline of MMS}
+  \begin{itemize}
+  \item \robot{} and \wspace{} yield \cspace{}
+  \item Sample \cspace{}
+  \item Build a \emph{connectivity graph} \(\roadmap{} = \left( V,E \right)\)
+    \begin{itemize}
+    \item \(V\) - Free Space Cells (FSC)
+    \item \(E\) - Between intersecting FSC's
+    \end{itemize}
+  \item Connect \(\cp{s}\) and \(\cp{t}\) to \roadmap{} and find free path
+  \end{itemize}
+  %
+  \begin{center}
+    \begin{tikzpicture}
+      \node[anchor=south west,inner sep=0] (image) at (0,0) {\includegraphics[width=0.7\linewidth]{./figures/mms-example}};
+      \begin{scope}[x={(image.south east)},y={(image.north west)}]
+        \node[rotate=90] at (1.1,0.5) {%
+          \footnotesize{Courtesy of Oren Salzman}
+        };
+      \end{scope}
+    \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Preprocessing}
+  \begin{itemize}
+  \item Family of constraints \(\Psi \Rightarrow\) manifolds in \cspace{}
+
+    Example: Translating and rotating planar robot
+    \begin{itemize}
+    \item Horizontal planes
+    \item Vertical slabs
+    \end{itemize}
+  \item Decompose the manifolds into \emph{Free Space Cells}
+  \item Connect, in \(\mathcal{G}\), intersecting FSC's
+  \end{itemize}
+  \begin{center}
+    \begin{tikzpicture}
+      \node[anchor=south west,inner sep=0] (image) at (0,0) {\includegraphics[width=0.7\linewidth]{./figures/mms-example}};
+      \begin{scope}[x={(image.south east)},y={(image.north west)}]
+        \node[rotate=90] at (1.1,0.5) {%
+          \footnotesize{Courtesy of Oren Salzman}
+        };
+      \end{scope}
+    \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Discussion}
+  \begin{itemize}
+  \item<1-> MMS is also probabilistic complete
+  \item<2-> No significant improvements in simple cases
+  \item<2-> 20-fold speedup in a coordination tight setting
+  \item<2-> Significant improvement in \href{http://acg.cs.tau.ac.il/projects/mms/project-page}{tight cases}
+  \end{itemize}
+
+  \onslide<2->{
+    \begin{center}
+      \begin{tikzpicture}
+        \node[anchor=south west,inner sep=0] (image) at (0,0) %
+          {\includegraphics[width=0.5\linewidth]{./figures/mms-preprocessing-vs-tightness-edt}};
+        \begin{scope}[x={(image.south east)},y={(image.north west)}]
+          \node[rotate=90] at (1.1,0.5) {%
+            \footnotesize{Courtesy of Oren Salzman}
+          };
+        \end{scope}
+      \end{tikzpicture}
+    \end{center}
+  }
+\end{frame}
+
+\section*{Summary}
+\begin{frame}
+  \frametitle{Summary}
+  \begin{itemize}
+  \item Introduced the motion planning problem, and
+  \item Sample based methods to solve it:
+    \begin{itemize}
+    \item Probabilistic Roadmap Method (PRM)
+    \item Motion Planning via Manifold Samples (MMS)
+    \item Rapidly-exploring Random Trees (RRT)\\ {\raggedleft due to \cite{La00}\par}
+    \item PRM\textsuperscript{*}, RRT\textsuperscript{*} and RRG (=Rapidly-exploring Random Graph)\\ {\raggedleft due to \cite{Ka11}\par}
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Thank you for your attention!}
+  \begin{itemize}
+  \item Twitter: @drorata
+  \item LinkedIn: \url{www.linkedin.com/in/atariah}
+  \end{itemize}
+\end{frame}
+
+\appendix
+\nocite{*}
+\section*{Halton Points}
+\begin{frame}[label=app-halton]
+  \frametitle{Halton Points}
+  \begin{itemize}
+  \item \(k \in \Z\) and a prime \(p \Rightarrow k = \sum_{i=0}^r a_i p^i\) s.t. \(0 \leq a_i < p\)
+  \item Let \(\Phi_p(k) = \sum_{i=0}^r \frac{a_i}{p^{i+1}}\)
+  \item For primes \(p_1 < p_2 < \ldots < p_{d-1}\), then the \(k\)-th \(d\)-dimensional \emph{Halton point} is %
+    \[%
+    \left( \frac{k}{n}, \Phi_{p_1}(k), \Phi_{p_2}(k), \ldots, \Phi_{p_{d-1}}(k) \right) \in [0,1]^d,
+    \]%
+    where \(k = 0,1,\ldots,n-1\)
+  \item For further details see \cite{Wo97,Ch98} and \cite[\S~5.2]{La06}
+\end{itemize}
+
+  \hyperlink{main-cspace-pts-pick}{\beamerreturnbutton{Back}}
+\end{frame}
+
+\section*{References}
+\begin{frame}[allowframebreaks]
+  \frametitle{References}
+  \printbibliography
+\end{frame}
+
+\end{document}

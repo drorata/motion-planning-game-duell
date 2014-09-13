@@ -1,0 +1,11 @@
+*.log
+*.aux
+auto/
+/main.bbl
+/main.bcf
+/main.blg
+/main.nav
+/main.pdf
+/main.run.xml
+/main.snm
+/main.toc

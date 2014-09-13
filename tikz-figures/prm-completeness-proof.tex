@@ -1,0 +1,39 @@
+\begin{tikzpicture}
+  \def\ptRad{3pt}
+  \def\rRad{2.5}
+  \coordinate (a) at (-3,-1);
+  \coordinate (b) at (3,1);
+
+  \draw<1->[ultra thick,%
+        insert node={\node[red](xtmp){};} at 0.47,
+        insert node={\node[red](xitmp){};} at 0.65
+  ] plot [smooth,tension=.95] %
+  coordinates{(a) (-1,0) (0,0) (1,0) (b)};
+  \coordinate (x) at (xtmp.center);
+  \coordinate (xi) at (xitmp.center);
+
+  \fill<1-> (a) node[below=2*\ptRad]{\(\cp{s}\)} circle (\ptRad);
+  \fill<1-> (b) node[above=2*\ptRad]{\(\cp{t}\)} circle (\ptRad);
+  \fill<2-> (x) circle (\ptRad);
+  \fill<2-> (xi) circle (\ptRad);
+
+  \onslide<2->{
+  \draw[dashed] (x) circle (\rRad);
+  \draw (x) node[below left]{\(\cp{x}_i\)} -- +(130:\rRad) node[sloped,above,pos=0.65]{\(R\)};
+  \draw (xi) node[below right]{\(\cp{x}_{i+1}\)} -- +(65:0.5*\rRad) node[sloped,below,pos=0.65]{\(\frac{R}{2}\)};
+  \draw (x) circle (0.5*\rRad);
+  \draw (xi) circle (0.5*\rRad);
+}
+
+\onslide<3->{
+  \coordinate (c) at ($(x)+(250:0.5*\rRad)$);
+  \coordinate (d) at ($(xi)+(275:0.5*\rRad)$);
+  \draw[thick,blue] (c) -- (d);
+  \fill (c) node[below left]{\(\cp{c}\)} circle (\ptRad);
+  \fill (d) node[below right]{\(\cp{d}\)} circle (\ptRad);
+}
+\end{tikzpicture}
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "../defense-motion-planning"
+%%% End:
